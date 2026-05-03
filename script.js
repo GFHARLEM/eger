@@ -5,7 +5,7 @@
 
 // ── CONFIG ───────────────────────────────────────────────────────
 // Change this URL when you deploy online
-const API = 'http://localhost:3000/api';
+const API = 'https://eger-backend.onrender.com';
 
 // ── STATE ─────────────────────────────────────────────────────────
 let allRooms          = [];
@@ -118,7 +118,7 @@ function renderListings(rooms) {
   const getRoomImg = (r) => {
     if (r.photos) {
       const firstPhoto = r.photos.split(',')[0].trim();
-      return `<img src="http://localhost:3000/uploads/${firstPhoto}" alt="${r.title}" loading="lazy" />`;
+      return `<img src="'https://eger-backend.onrender.com'/uploads/${firstPhoto}" alt="${r.title}" loading="lazy" />`;
     }
     return r.icon || '🏠';
   };
