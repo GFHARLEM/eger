@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — NjoroNest</title>
+  <meta name="description" content="NjoroNest administration panel for managing users, rooms, and platform stats." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="dash-layout">
+
+  <!-- ── HEADER ──────────────────────────────────────────────── -->
+  <header class="dash-header" style="background:#1a4d2e;">
+    <div class="dash-header-left">
+      <a href="index.html" class="nav-logo">Njoro<span>Nest</span></a>
+      <span class="dash-role-badge" style="background:rgba(220,38,38,0.2); color:#fca5a5;">Admin</span>
+    </div>
+    <div class="dash-header-right">
+      <div class="dash-user-info">
+        🛡️ <strong id="dashUsername" style="color:#fca5a5;">Admin</strong>
+      </div>
+      <a href="index.html" class="btn-logout" style="background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.12);">View Site</a>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <!-- ── CONTENT ─────────────────────────────────────────────── -->
+  <div class="dash-content">
+    <div class="dash-welcome">
+      <h1>System Administration ⚙️</h1>
+      <p>Manage users, content, and view platform statistics.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="dash-stats" id="adminStats">
+      <div class="dash-stat-card"><div class="dash-stat-num" id="s-users">0</div><div class="dash-stat-label">Total Users</div></div>
+      <div class="dash-stat-card"><div class="dash-stat-num" id="s-rooms">0</div><div class="dash-stat-label">Total Rooms</div></div>
+      <div class="dash-stat-card"><div class="dash-stat-num" id="s-books">0</div><div class="dash-stat-label">Bookings</div></div>
+      <div class="dash-stat-card"><div class="dash-stat-num" id="s-reviews">0</div><div class="dash-stat-label">Reviews</div></div>
+    </div>
+
+    <!-- Users Target -->
+    <div class="dash-section">
+      <h2>👥 User Management</h2>
+      <div style="overflow-x:auto;">
+        <table class="dash-table">
+          <thead>
+            <tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Registered</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="usersList">
+            <tr><td colspan="6" class="dash-empty">Loading users...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Rooms Target -->
+    <div class="dash-section">
+      <h2>🏠 Listing Management (All Rooms)</h2>
+      <div style="overflow-x:auto;">
+        <table class="dash-table">
+          <thead>
+            <tr><th>ID</th><th>Title</th><th>Type</th><th>Landlord Phone</th><th>Created</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="roomsList">
+            <tr><td colspan="6" class="dash-empty">Loading rooms...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pending Requests Target -->
+    <div class="dash-section">
+      <h2>📨 Listing Requests <span style="font-size:0.8rem; font-weight:400; color:var(--muted);">(Legacy System)</span></h2>
+      <div style="overflow-x:auto;">
+        <table class="dash-table">
+          <thead>
+            <tr><th>Name</th><th>Phone</th><th>Type</th><th>Location</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="requestsList">
+            <tr><td colspan="6" class="dash-empty">Loading requests...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:3000/api';
+let currentUser = null;
+
+// ── AUTH GUARD ────────────────────────────────────────────────
+(function() {
+  const user = JSON.parse(localStorage.getItem('njoronest_user') || 'null');
+  const token = localStorage.getItem('njoronest_token');
+  if (!user || !token || user.role !== 'admin') {
+    window.location.href = 'login.html';
+    return;
+  }
+  currentUser = user;
+  document.getElementById('dashUsername').textContent = user.username;
+  
+  loadStats();
+  loadUsers();
+  loadRooms();
+  loadRequests();
+})();
+
+function getToken() { return localStorage.getItem('njoronest_token'); }
+
+function logout() {
+  localStorage.removeItem('njoronest_token');
+  localStorage.removeItem('njoronest_user');
+  window.location.href = 'login.html';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ── LOAD DATA ────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res = await fetch(`${API}/admin/stats`, { headers: { 'Authorization': 'Bearer ' + getToken() }});
+    const data = await res.json();
+    if(data.success) {
+      document.getElementById('s-users').textContent = data.totalUsers;
+      document.getElementById('s-rooms').textContent = data.totalRooms;
+      document.getElementById('s-books').textContent = data.totalBookings;
+      document.getElementById('s-reviews').textContent = data.totalReviews;
+    }
+  } catch(e) {}
+}
+
+async function loadUsers() {
+  try {
+    const res = await fetch(`${API}/admin/users`, { headers: { 'Authorization': 'Bearer ' + getToken() }});
+    const data = await res.json();
+    if(data.success) {
+      const html = data.users.map(u => `
+        <tr>
+          <td>#${u.user_id}</td>
+          <td><strong>${u.username}</strong></td>
+          <td>${u.email}</td>
+          <td><span class="dash-role-badge" style="${u.role_name==='admin'?'background:#fca5a5;color:#991b1b;':''}">${u.role_name}</span></td>
+          <td>${new Date(u.created_at).toLocaleDateString()}</td>
+          <td>
+            ${u.user_id !== currentUser.user_id ? 
+              `<button class="btn-danger" onclick="deleteUser(${u.user_id})">Delete</button>` 
+            : '<span style="color:#aaa;font-size:0.8rem">You</span>'}
+          </td>
+        </tr>
+      `).join('');
+      document.getElementById('usersList').innerHTML = html || '<tr><td colspan="6" class="dash-empty">No users found.</td></tr>';
+    }
+  } catch(e) {}
+}
+
+async function loadRooms() {
+  try {
+    const res = await fetch(`${API}/rooms?type=all`); // use public endpoint, maybe need auth if showing hidden
+    const data = await res.json();
+    if(data.success) {
+      const html = data.rooms.map(r => `
+        <tr>
+          <td>#${r.id}</td>
+          <td><strong>${r.title}</strong></td>
+          <td>${r.type}</td>
+          <td>${r.phone}</td>
+          <td>${new Date(r.created_at).toLocaleDateString()}</td>
+          <td>
+            <button class="btn-danger" onclick="deleteRoom(${r.id})">Delete Room</button>
+          </td>
+        </tr>
+      `).join('');
+      document.getElementById('roomsList').innerHTML = html || '<tr><td colspan="6" class="dash-empty">No rooms found.</td></tr>';
+    }
+  } catch(e) {}
+}
+
+async function loadRequests() {
+  try {
+    const res = await fetch(`${API}/admin/requests`, { headers: { 'Authorization': 'Bearer ' + getToken() }});
+    const data = await res.json();
+    if(data.success) {
+      const html = data.requests.map(r => `
+        <tr>
+          <td><strong>${r.landlord_name}</strong></td>
+          <td>${r.phone}</td>
+          <td>${r.type}</td>
+          <td>${r.location}</td>
+          <td>${r.status === 'pending' ? '<span style="color:#ca8a04;font-weight:600">Pending</span>' : r.status}</td>
+          <td>
+            ${r.status === 'pending' ? `<button class="btn-sm btn-sm-green" onclick="approveRequest(${r.id})">Approve & Publish</button>` : '—'}
+          </td>
+        </tr>
+      `).join('');
+      document.getElementById('requestsList').innerHTML = html || '<tr><td colspan="6" class="dash-empty">No listing requests.</td></tr>';
+    }
+  } catch(e) {}
+}
+
+// ── ACTIONS ──────────────────────────────────────────────────
+async function deleteUser(id) {
+  if(!confirm('Delete this user permanently?')) return;
+  try {
+    const res = await fetch(`${API}/admin/users/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getToken() }});
+    if((await res.json()).success) { showToast('✅ User deleted'); loadUsers(); loadStats(); }
+  } catch(e) {}
+}
+
+async function deleteRoom(id) {
+  if(!confirm('Delete this room permanently? This breaks existing bookings.')) return;
+  try {
+    const res = await fetch(`${API}/admin/rooms/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getToken() }});
+    if((await res.json()).success) { showToast('✅ Room deleted'); loadRooms(); loadStats(); }
+  } catch(e) {}
+}
+
+async function approveRequest(id) {
+  if(!confirm('Approve this request and publish the room?')) return;
+  try {
+    const res = await fetch(`${API}/admin/approve/${id}`, { method: 'POST', headers: { 'Authorization': 'Bearer ' + getToken() }});
+    if((await res.json()).success) { showToast('✅ Room published!'); loadRequests(); loadRooms(); loadStats(); }
+  } catch(e) {}
+}
+</script>
+</body>
+</html>

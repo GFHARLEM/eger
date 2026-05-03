@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NjoroNest — Student Rentals Near Egerton</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ── NAV ─────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-logo">Njoro<span>Nest</span></div>
+  <div class="nav-links">
+    <a href="#hero">Home</a>
+    <a href="#listings">Rooms</a>
+    <a href="#mapSection">Map Explorer</a>
+  </div>
+  
+  <!-- AUTH LINKS (dynamic) -->
+  <div class="nav-auth-links" id="navAuthLinks">
+    <!-- Will be populated by JS -->
+  </div>
+  <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <button class="menu-close" onclick="toggleMenu()">✕</button>
+  <ul class="mobile-nav-links">
+    <li><a href="#listings" onclick="toggleMenu()">Browse Rooms</a></li>
+    <li><a href="#" onclick="openLiveDirectionsTab(); toggleMenu(); return false;">Live Directions</a></li>
+    <li><a href="#how" onclick="toggleMenu()">How It Works</a></li>
+  </ul>
+  <!-- Dynamic Mobile Auth -->
+  <div id="mobileAuthLinks" style="padding: 1.5rem; border-top: 1px solid rgba(0,0,0,0.05); margin-top: 1rem;"></div>
+</div>
+
+<!-- ── HERO ────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-badge">🏠 Egerton University — Njoro</div>
+  <h1>Find Your <em>Perfect Room</em><br>Near Campus</h1>
+  <p>Verified, affordable rentals outside Egerton University. No agent fees. Pay via M-Pesa.</p>
+  <div class="search-bar">
+    <input type="text" id="heroSearch" placeholder="Search by location, price, type..." oninput="handleHeroSearch()" />
+    <button onclick="handleHeroSearch()">🔍 Search</button>
+  </div>
+  <div class="stats-strip">
+    <div class="stat">
+      <div class="stat-num" id="statRooms">0</div>
+      <div class="stat-label">Rooms Listed</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="statLandlords">0</div>
+      <div class="stat-label">Landlords</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">Free</div>
+      <div class="stat-label">To Browse</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FILTERS ─────────────────────────────────────────────────── -->
+<div class="filters-wrap" id="listings">
+  <span class="filter-label">Filter:</span>
+  <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+  <select class="filter-select" onchange="setRentalFilter(this.value)">
+    <option value="all">Rentals</option>
+    <option value="bedsitter">Bedsitter</option>
+    <option value="single">Single Room</option>
+    <option value="one-bedroom">1 Bedroom</option>
+    <option value="shared">Shared</option>
+  </select>
+  <button class="filter-btn" onclick="setFilter('airbnb', this)">Airbnb</button>
+  <button class="filter-btn" onclick="setFilter('booked-airbnb', this)">Booked Airbnbs</button>
+  <select class="filter-select" onchange="setPriceFilter(this.value)">
+    <option value="all">Any Price</option>
+    <option value="0-4500">Under KES 4,500</option>
+    <option value="4500-6000">KES 4,500 – 6,000</option>
+    <option value="6000-10000">KES 6,000 – 10,000</option>
+    <option value="10000-99999">KES 10,000+</option>
+  </select>
+  <select class="filter-select" onchange="setStayFilter(this.value)">
+    <option value="all">Any Stay Length</option>
+    <option value="1">1+ day</option>
+    <option value="2">2+ days</option>
+    <option value="3">3+ days</option>
+    <option value="7">1+ week</option>
+  </select>
+</div>
+
+<!-- ── LISTINGS ────────────────────────────────────────────────── -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">
+        All Rooms
+        <span id="roomCount" style="font-size:1rem;color:var(--muted);font-family:var(--font-body);font-weight:400;"></span>
+      </h2>
+      <a href="#" class="section-link" onclick="openListModal()">List your room →</a>
+    </div>
+    <div class="listings-grid" id="listingsGrid"></div>
+    <div class="empty-state" id="emptyState">
+      <div class="icon">🔍</div>
+      <h3>No rooms found</h3>
+      <p>Try adjusting your filters or search terms.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ────────────────────────────────────────────── -->
+<section class="how-section" id="how">
+  <h2 class="section-title">How NjoroNest Works</h2>
+  <p class="sub">Simple. Transparent. No hidden fees.</p>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">01</div>
+      <div class="step-title">Browse & Filter</div>
+      <div class="step-desc">Browse verified rooms near Egerton. Filter by price, type, and distance.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">02</div>
+      <div class="step-title">Contact Landlord</div>
+      <div class="step-desc">WhatsApp or call the landlord directly. No middleman. No agent fee.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">03</div>
+      <div class="step-title">Visit & Confirm</div>
+      <div class="step-desc">View the room in person before committing. Always verify before paying.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">04</div>
+      <div class="step-title">Pay via M-Pesa</div>
+      <div class="step-desc">Secure deposit payments directly via M-Pesa. No cash risks.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── LIST YOUR ROOM ──────────────────────────────────────────── -->
+<section class="list-section">
+  <h2>Are You a Landlord?</h2>
+  <p>List your room for free and reach thousands of Egerton students looking for accommodation right now.</p>
+  <button class="btn-primary" onclick="openListModal()">📋 List Your Room — It's Free</button>
+</section>
+
+<!-- ── FOOTER ──────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="nav-logo">Njoro<span>Nest</span></div>
+      <p>Connecting Egerton University students with safe, affordable rentals in Njoro and surroundings.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Students</h4>
+      <ul>
+        <li><a href="#listings">Browse Rooms</a></li>
+        <li><a href="#how">How It Works</a></li>
+        <li><a href="safety-tips.html">Safety Tips</a></li>
+        <li><a href="#" onclick="openReportListingPopup(); return false;">Report a Listing</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Landlords</h4>
+      <ul>
+        <li><a href="#" onclick="openListModal()">List a Room</a></li>
+        <li><a href="landlord-guide.html">Landlord Guide</a></li>
+        <li><a href="terms-of-service.html">Terms of Service</a></li>
+        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 NjoroNest. Built for Egerton students.</span>
+    <span>Made with ❤️ in Njoro, Kenya</span>
+  </div>
+</footer>
+
+<!-- ── MODALS ────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="detailModal" onclick="closeDetailModal(event)">
+  <div class="modal" id="detailModalInner">
+    <div class="modal-header">
+      <h3 id="modalTitle">Room Title</h3>
+      <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Room photo -->
+      <div class="modal-photo" id="modalPhoto"></div>
+      <!-- Price + details -->
+      <div class="modal-price" id="modalPrice"></div>
+      <div class="detail-grid" id="modalDetails"></div>
+      <p class="modal-desc" id="modalDesc"></p>
+      <div class="modal-actions" id="modalActions"></div>
+
+      <!-- ── REVIEWS SECTION ── -->
+      <div class="reviews-section">
+        <div class="reviews-header">
+          <h4 class="reviews-title">Student Reviews</h4>
+          <div class="reviews-avg" id="reviewsAvg"></div>
+        </div>
+
+        <!-- Write a review -->
+        <div class="review-form">
+          <div class="review-form-title">Leave a Review</div>
+          <div class="star-picker" id="starPicker">
+            <span class="star-pick" data-val="1" onclick="setReviewStar(1)">★</span>
+            <span class="star-pick" data-val="2" onclick="setReviewStar(2)">★</span>
+            <span class="star-pick" data-val="3" onclick="setReviewStar(3)">★</span>
+            <span class="star-pick" data-val="4" onclick="setReviewStar(4)">★</span>
+            <span class="star-pick" data-val="5" onclick="setReviewStar(5)">★</span>
+          </div>
+          <input  type="text"     class="form-control" id="reviewName"    placeholder="Your name (e.g. Brian K.)"  style="margin-bottom:.6rem" />
+          <textarea class="form-control" id="reviewComment" rows="2"      placeholder="Share your experience with this room..." style="margin-bottom:.7rem"></textarea>
+          <button class="review-submit-btn" onclick="submitReview()">Post Review</button>
+        </div>
+
+        <!-- Existing reviews list -->
+        <div id="reviewsList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="listModal" onclick="closeDetailModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>List Your Room — Free</h3>
+      <button class="modal-close" onclick="closeModal('listModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1.2rem;">Fill in your room details. We'll review and publish within 24 hours.</p>
+      <div class="form-group">
+        <label>Your Name</label>
+        <input type="text" class="form-control" placeholder="e.g. John Kamau" id="ll-name" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Phone (WhatsApp)</label>
+          <input type="tel" class="form-control" placeholder="07XXXXXXXX" id="ll-phone" />
+        </div>
+        <div class="form-group">
+          <label>Room Type</label>
+          <select class="form-control" id="ll-type" onchange="toggleAirbnbFields()">
+            <option value="bedsitter">Bedsitter</option>
+            <option value="single">Single Room</option>
+            <option value="one-bedroom">1 Bedroom</option>
+            <option value="shared">Shared Room</option>
+            <option value="airbnb">Airbnb</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Pricing Model</label>
+          <select class="form-control" id="ll-pricing-model">
+            <option value="monthly">Per Month</option>
+            <option value="nightly">Per Night</option>
+            <option value="daily">Per Day</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Minimum Stay (days)</label>
+          <input type="number" min="1" class="form-control" placeholder="e.g. 2" id="ll-min-stay" value="1" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Monthly Rent (KES)</label>
+          <input type="number" class="form-control" placeholder="e.g. 5000" id="ll-price" />
+        </div>
+        <div class="form-group">
+          <label>Distance from Gate</label>
+          <input type="text" class="form-control" placeholder="e.g. 5 min walk" id="ll-distance" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Location / Street</label>
+        <input type="text" class="form-control" placeholder="e.g. Njoro Town, near Total petrol" id="ll-location" />
+      </div>
+      <div class="form-group">
+        <label>Amenities</label>
+        <input type="text" class="form-control" placeholder="e.g. Water, WiFi, Security, Parking" id="ll-amenities" />
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea class="form-control" rows="3" placeholder="Describe the room — size, condition, rules..." id="ll-desc"></textarea>
+        <div class="form-note">Be honest. Students appreciate transparency.</div>
+      </div>
+      <div class="form-group" id="airbnbDetailsGroup" style="display:none;">
+        <label>Airbnb Details (visible to guests)</label>
+        <textarea class="form-control" rows="2" placeholder="e.g. self check-in, check-in hours, house rules..." id="ll-airbnb-details"></textarea>
+      </div>
+
+      <!-- ── PHOTO UPLOAD ── -->
+      <div class="form-group">
+        <label>Room Photos <span style="font-weight:400;color:var(--muted)">(optional, max 4 photos)</span></label>
+        <div class="photo-upload-area" id="photoUploadArea" onclick="document.getElementById('ll-photos').click()">
+          <div class="photo-upload-icon">📷</div>
+          <div class="photo-upload-text">Click to add photos</div>
+          <div class="photo-upload-sub">JPG, PNG · Max 5MB each</div>
+        </div>
+        <input type="file" id="ll-photos" accept="image/*" multiple style="display:none" onchange="handlePhotoSelect(event)" />
+        <div class="photo-previews" id="photoPreviews"></div>
+        <div class="form-note">Good photos get 3× more enquiries. Show the room, bathroom, and kitchen.</div>
+      </div>
+
+      <button class="submit-btn" onclick="submitListing()">Submit for Review 🚀</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="reportModal" onclick="closeDetailModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Report a Listing</h3>
+      <button class="modal-close" onclick="closeModal('reportModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1rem;">
+        To prevent abuse, only users who have booked the listing at least once can submit a report.
+      </p>
+      <div class="form-group">
+        <label>Listing ID</label>
+        <input type="number" id="report-room-id" class="form-control" placeholder="e.g. 12" />
+      </div>
+      <div class="form-group">
+        <label>Your Name</label>
+        <input type="text" id="report-name" class="form-control" placeholder="e.g. Jane W." />
+      </div>
+      <div class="form-group">
+        <label>Phone Used During Booking</label>
+        <input type="tel" id="report-phone" class="form-control" placeholder="07XXXXXXXX" />
+      </div>
+      <div class="form-group">
+        <label>Reason</label>
+        <select id="report-reason" class="form-control">
+          <option value="">Select reason</option>
+          <option value="Fraud / misleading listing">Fraud / misleading listing</option>
+          <option value="Unsafe property condition">Unsafe property condition</option>
+          <option value="Harassment or misconduct">Harassment or misconduct</option>
+          <option value="Pricing mismatch">Pricing mismatch</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Details</label>
+        <textarea id="report-details" class="form-control" rows="3" placeholder="Provide clear details to help investigations."></textarea>
+      </div>
+      <button class="submit-btn" onclick="submitListingReport()">Submit Report</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="bookingModal" onclick="closeDetailModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="bookingModalTitle">Book Airbnb Unit</h3>
+      <button class="modal-close" onclick="closeModal('bookingModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1rem;" id="bookingModalMeta"></p>
+      <div class="form-group">
+        <label>Your Full Name</label>
+        <input type="text" id="bk-name" class="form-control" placeholder="e.g. Mercy W." />
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="bk-phone" class="form-control" placeholder="07XXXXXXXX" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Stay (days / nights)</label>
+          <input type="number" min="1" id="bk-days" class="form-control" value="1" />
+        </div>
+        <div class="form-group">
+          <label>Check-in Date</label>
+          <input type="date" id="bk-checkin" class="form-control" />
+        </div>
+      </div>
+      <button class="submit-btn" onclick="submitBookingFromModal()">Confirm Booking</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ────────────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<!-- script.js goes at the bottom so the HTML loads first -->
+<script src="script.js"></script>
+
+</body>
+</html>

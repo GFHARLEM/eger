@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Dashboard — NjoroNest</title>
+  <meta name="description" content="Your personalized NjoroNest student dashboard. Browse rooms, post reviews, and manage your account." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="dash-layout">
+
+  <!-- ── HEADER ──────────────────────────────────────────────── -->
+  <header class="dash-header">
+    <div class="dash-header-left">
+      <a href="index.html" class="nav-logo">Njoro<span>Nest</span></a>
+      <span class="dash-role-badge">Student</span>
+    </div>
+    <div class="dash-header-right">
+      <div class="dash-user-info">
+        👋 <strong id="dashUsername">Student</strong>
+      </div>
+      <a href="index.html" class="btn-logout" style="background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.12);">Browse Rooms</a>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <!-- ── CONTENT ─────────────────────────────────────────────── -->
+  <div class="dash-content">
+    <div class="dash-welcome">
+      <h1>Welcome, <span id="welcomeName">Student</span> 🎓</h1>
+      <p>Browse verified rooms near Egerton University. Click any room to view details and post reviews.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="dash-stats">
+      <div class="dash-stat-card">
+        <div class="dash-stat-num" id="statRooms">0</div>
+        <div class="dash-stat-label">Rooms Available</div>
+      </div>
+      <div class="dash-stat-card">
+        <div class="dash-stat-num" id="statLandlords">0</div>
+        <div class="dash-stat-label">Landlords</div>
+      </div>
+      <div class="dash-stat-card">
+        <div class="dash-stat-num">Free</div>
+        <div class="dash-stat-label">To Browse</div>
+      </div>
+    </div>
+
+    <!-- Room Listings -->
+    <div class="dash-section">
+      <h2>Available Rooms <span id="roomCount" style="font-size:.85rem;color:var(--muted);font-weight:400;"></span></h2>
+      <div class="listings-grid" id="listingsGrid"></div>
+      <div class="dash-empty" id="emptyState" style="display:none;">
+        <div style="font-size:2.5rem;margin-bottom:0.7rem;">🔍</div>
+        <p>No rooms found. Try adjusting your search.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── DETAIL MODAL (reuse from index.html) ───────────────────── -->
+<div class="modal-overlay" id="detailModal" onclick="closeDetailModal(event)">
+  <div class="modal" id="detailModalInner">
+    <div class="modal-header">
+      <h3 id="modalTitle">Room Title</h3>
+      <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-photo" id="modalPhoto"></div>
+      <div class="modal-price" id="modalPrice"></div>
+      <div class="detail-grid" id="modalDetails"></div>
+      <p class="modal-desc" id="modalDesc"></p>
+      <div class="modal-actions" id="modalActions"></div>
+      <div class="reviews-section">
+        <div class="reviews-header">
+          <h4 class="reviews-title">Student Reviews</h4>
+          <div class="reviews-avg" id="reviewsAvg"></div>
+        </div>
+        <div class="review-form">
+          <div class="review-form-title">Leave a Review</div>
+          <div class="star-picker" id="starPicker">
+            <span class="star-pick" data-val="1" onclick="setReviewStar(1)">★</span>
+            <span class="star-pick" data-val="2" onclick="setReviewStar(2)">★</span>
+            <span class="star-pick" data-val="3" onclick="setReviewStar(3)">★</span>
+            <span class="star-pick" data-val="4" onclick="setReviewStar(4)">★</span>
+            <span class="star-pick" data-val="5" onclick="setReviewStar(5)">★</span>
+          </div>
+          <input type="text" class="form-control" id="reviewName" placeholder="Your name (e.g. Brian K.)" style="margin-bottom:.6rem" />
+          <textarea class="form-control" id="reviewComment" rows="2" placeholder="Share your experience..." style="margin-bottom:.7rem"></textarea>
+          <button class="review-submit-btn" onclick="submitReview()">Post Review</button>
+        </div>
+        <div id="reviewsList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal-overlay" id="bookingModal" onclick="closeDetailModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="bookingModalTitle">Book Airbnb Unit</h3>
+      <button class="modal-close" onclick="closeModal('bookingModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1rem;" id="bookingModalMeta"></p>
+      <div class="form-group">
+        <label>Your Full Name</label>
+        <input type="text" id="bk-name" class="form-control" placeholder="e.g. Mercy W." />
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="bk-phone" class="form-control" placeholder="07XXXXXXXX" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Stay (days / nights)</label>
+          <input type="number" min="1" id="bk-days" class="form-control" value="1" />
+        </div>
+        <div class="form-group">
+          <label>Check-in Date</label>
+          <input type="date" id="bk-checkin" class="form-control" />
+        </div>
+      </div>
+      <button class="submit-btn" onclick="submitBookingFromModal()">Confirm Booking</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+<script>
+// ── AUTH GUARD ────────────────────────────────────────────────
+(function() {
+  const user = JSON.parse(localStorage.getItem('njoronest_user') || 'null');
+  const token = localStorage.getItem('njoronest_token');
+  if (!user || !token || user.role !== 'student') {
+    window.location.href = 'login.html';
+    return;
+  }
+  document.getElementById('dashUsername').textContent = user.username;
+  document.getElementById('welcomeName').textContent = user.username;
+})();
+</script>
+
+</body>
+</html>
