@@ -5,7 +5,7 @@
 
 // ── CONFIG ───────────────────────────────────────────────────────
 // Change this URL when you deploy online
-const API = 'http://localhost:3000/api';
+const API = 'http://localhost:5000/api';
 
 // ── STATE ─────────────────────────────────────────────────────────
 let allRooms          = [];
