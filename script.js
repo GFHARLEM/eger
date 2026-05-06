@@ -5,7 +5,7 @@
 
 // ── CONFIG ───────────────────────────────────────────────────────
 // Change this URL when you deploy online
-const API = 'https://eger-backend.onrender.com';
+const API = 'http://localhost:5000/api';
 
 // ── STATE ─────────────────────────────────────────────────────────
 let allRooms          = [];
@@ -34,7 +34,7 @@ async function fetchRooms() {
       const [min, max] = activePriceFilter.split('-');
       params.set('minPrice', min);
       params.set('maxPrice', max);
-    }
+    } 
     if (activeStayFilter !== 'all') params.set('stayDays', activeStayFilter);
 
     const token = localStorage.getItem('njoronest_token');
@@ -118,7 +118,7 @@ function renderListings(rooms) {
   const getRoomImg = (r) => {
     if (r.photos) {
       const firstPhoto = r.photos.split(',')[0].trim();
-      return `<img src="'https://eger-backend.onrender.com'/uploads/${firstPhoto}" alt="${r.title}" loading="lazy" />`;
+      return `<img src="${API}/uploads/${firstPhoto}" alt="${r.title}" loading="lazy" />`;
     }
     return r.icon || '🏠';
   };
@@ -241,7 +241,7 @@ async function openDetailModal(id) {
   }
 
   const waMsg = `Hi, I saw your ${r.type} on NjoroNest. Is it still available?`;
-  const UPLOADS = API.replace('/api', '') + '/uploads/';
+  const UPLOADS = 'http://localhost:5000/uploads/';
 
   // ── Photos ──
   const photoEl = document.getElementById('modalPhoto');
