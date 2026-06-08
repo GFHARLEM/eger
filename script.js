@@ -5,7 +5,7 @@
 
 // ── CONFIG ───────────────────────────────────────────────────────
 // Change this URL when you deploy online
-const API = 'https://eger-backend.onrender.com/api';
+const API_URL = "https://eger-backend.onrender.com";
 
 // ── STATE ─────────────────────────────────────────────────────────
 let allRooms          = [];
