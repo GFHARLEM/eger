@@ -1,6 +1,5 @@
 // ================================================================
-// NjoroNest — script.js
-
+// NjoroNest — script.js (FIXED)
 // ================================================================
 
 // ── CONFIG ───────────────────────────────────────────────────────
@@ -114,11 +113,10 @@ function renderListings(rooms) {
   const getTags = (amenities) =>
     amenities ? amenities.split(',').map(a => a.trim()).slice(0, 4) : [];
 
-  // Build the room image — real photo if available, emoji fallback if not
   const getRoomImg = (r) => {
     if (r.photos) {
       const firstPhoto = r.photos.split(',')[0].trim();
-      return `<img src="${API.replace('/api','')}/uploads/${firstPhoto}" alt="${r.title}" loading="lazy" />`;
+      return `<img src="${API_URL}/uploads/${firstPhoto}" alt="${r.title}" loading="lazy" />`;
     }
     return r.icon || '🏠';
   };
@@ -177,7 +175,6 @@ function setFilter(type, btn) {
   activeFilter = type;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  // Reset the Rentals dropdown when a button filter is clicked
   const rentalSelect = document.querySelector('.filter-select[onchange*="setRentalFilter"]');
   if (rentalSelect) rentalSelect.value = 'all';
   fetchRooms();
@@ -190,7 +187,6 @@ function setPriceFilter(val) {
 
 function setRentalFilter(val) {
   activeFilter = val;
-  // Deactivate all filter buttons, reactivate "All" only if val is "all"
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   if (val === 'all') {
     document.querySelector('.filter-btn').classList.add('active');
@@ -220,16 +216,14 @@ async function openDetailModal(id) {
   document.getElementById('detailModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 
-  // Reset review form
   if (document.getElementById('reviewName'))    document.getElementById('reviewName').value    = '';
   if (document.getElementById('reviewComment')) document.getElementById('reviewComment').value = '';
   setReviewStar(0);
 
-  // Try cache first, then fetch
   let r = allRooms.find(x => x.id === id);
   if (!r) {
     try {
-      const res  = await fetch(`${API}/rooms/${id}`);
+      const res  = await fetch(`${API_URL}/rooms/${id}`);
       const data = await res.json();
       if (data.success) r = data.room;
     } catch (e) {}
@@ -241,9 +235,8 @@ async function openDetailModal(id) {
   }
 
   const waMsg = `Hi, I saw your ${r.type} on NjoroNest. Is it still available?`;
-  const UPLOADS = API.replace('/api', '') + '/uploads/';
+  const UPLOADS = API_URL + '/uploads/';
 
-  // ── Photos ──
   const photoEl = document.getElementById('modalPhoto');
   photoEl.style.cssText = '';
   if (r.photos) {
@@ -317,13 +310,12 @@ async function fetchReviews(roomId) {
   list.innerHTML = '<div class="reviews-loading">Loading reviews...</div>';
 
   try {
-    const res  = await fetch(`${API}/reviews/${roomId}`);
+    const res  = await fetch(`${API_URL}/reviews/${roomId}`);
     const data = await res.json();
     if (!data.success) throw new Error(data.message);
 
     const reviews = data.reviews;
 
-    // Average score
     if (reviews.length > 0) {
       const score = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
       avg.innerHTML = `
@@ -335,7 +327,6 @@ async function fetchReviews(roomId) {
       avg.innerHTML = '<span style="color:var(--muted);font-size:.82rem">No reviews yet</span>';
     }
 
-    // Render list
     if (reviews.length === 0) {
       list.innerHTML = '<div class="reviews-empty">No reviews yet — be the first to review this room!</div>';
     } else {
@@ -369,7 +360,7 @@ async function submitReview() {
   btn.disabled    = true;
 
   try {
-    const res  = await fetch(`${API}/reviews/${currentRoomId}`, {
+    const res  = await fetch(`${API_URL}/reviews/${currentRoomId}`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reviewer_name: name, rating: currentRating, comment })
@@ -381,7 +372,7 @@ async function submitReview() {
       document.getElementById('reviewComment').value = '';
       setReviewStar(0);
       showToast('✅ Review posted!');
-      fetchReviews(currentRoomId); // refresh the list
+      fetchReviews(currentRoomId);
     } else {
       showToast('⚠️ ' + data.message);
     }
@@ -429,12 +420,11 @@ function closeModal(id) {
 // ── PHOTO UPLOAD ──────────────────────────────────────────────────
 const MAX_PHOTOS = 4;
 const MAX_SIZE_MB = 5;
-let selectedPhotos = []; // array of File objects
+let selectedPhotos = [];
 
 function handlePhotoSelect(event) {
   const files = Array.from(event.target.files);
   addPhotos(files);
-  // reset input so same file can be re-selected if removed
   event.target.value = '';
 }
 
@@ -443,7 +433,6 @@ function addPhotos(files) {
   const toAdd     = files.slice(0, remaining);
 
   toAdd.forEach(file => {
-    // size check
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
       showToast(`⚠️ ${file.name} is over ${MAX_SIZE_MB}MB — skipped`);
       return;
@@ -479,7 +468,6 @@ function renderPreviews() {
     container.appendChild(thumb);
   });
 
-  // Update upload area text
   const remaining = MAX_PHOTOS - selectedPhotos.length;
   area.querySelector('.photo-upload-text').textContent =
     selectedPhotos.length === 0
@@ -488,11 +476,9 @@ function renderPreviews() {
         ? `Add more (${remaining} left)`
         : '4 photos selected ✓';
 
-  // hide area if maxed out
   area.style.display = remaining === 0 ? 'none' : 'block';
 }
 
-// Drag-and-drop support
 document.addEventListener('DOMContentLoaded', () => {
   const area = document.getElementById('photoUploadArea');
   if (!area) return;
@@ -533,7 +519,6 @@ async function submitListing() {
     return;
   }
 
-  // Use FormData to send text fields + photo files together
   const formData = new FormData();
   formData.append('landlord_name', landlord_name);
   formData.append('phone',         phone);
@@ -547,39 +532,34 @@ async function submitListing() {
   formData.append('min_stay_days', min_stay_days);
   selectedPhotos.forEach(file => formData.append('photos', file, file.name));
 
-  // Loading state on button
   const btn = document.querySelector('.submit-btn');
   const originalText = btn.textContent;
   btn.textContent = 'Submitting...';
   btn.disabled    = true;
 
   try {
-    const res  = await fetch(`${API}/listings`, {
+    const res  = await fetch(`${API_URL}/listings`, {
       method: 'POST',
       body:   formData
-      // Do NOT set Content-Type — browser sets it with multipart boundary automatically
     });
     const data = await res.json();
 
     if (data.success) {
       closeModal('listModal');
       showToast('✅ Room listed! It\'s now live on the site.');
-      // Clear form
       ['ll-name','ll-phone','ll-price','ll-location','ll-distance','ll-amenities','ll-desc']
         .forEach(id => document.getElementById(id).value = '');
       if (document.getElementById('ll-min-stay')) document.getElementById('ll-min-stay').value = '1';
       if (document.getElementById('ll-pricing-model')) document.getElementById('ll-pricing-model').value = 'monthly';
-      // Clear photos
       selectedPhotos = [];
       renderPreviews();
-      // Immediately refresh listings grid so new room appears
       fetchRooms();
       fetchStats();
     } else {
       showToast('⚠️ ' + data.message);
     }
   } catch (err) {
-    showToast('❌ Could not reach server. Is it running on port 3000?');
+    showToast('❌ Could not reach server. Is it running?');
     console.error('submitListing error:', err);
   } finally {
     btn.textContent = originalText;
@@ -620,7 +600,7 @@ async function submitBookingFromModal() {
   }
 
   try {
-    const res = await fetch(`${API}/bookings/${roomId}`, {
+    const res = await fetch(`${API_URL}/bookings/${roomId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ guest_name, guest_phone, stay_days, check_in_date })
@@ -671,7 +651,7 @@ async function submitListingReport() {
   }
 
   try {
-    const res = await fetch(`${API}/reports/${roomId}`, {
+    const res = await fetch(`${API_URL}/reports/${roomId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reporter_name, reporter_phone, reason, details })
@@ -956,7 +936,6 @@ document.addEventListener('DOMContentLoaded', () => {
   toggleAirbnbFields();
 });
 
-// Close mobile menu on outside click
 document.addEventListener('click', (e) => {
   const menu = document.getElementById('mobileMenu');
   if (menu.classList.contains('open') &&
@@ -966,7 +945,6 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Close modals with Escape key
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
