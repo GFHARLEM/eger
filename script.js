@@ -41,7 +41,7 @@ async function fetchRooms() {
     const headers = {};
     if (token) headers['Authorization'] = 'Bearer ' + token;
 
-    const res  = await fetch(`${API}/rooms?${params}`, { headers });
+    const res  = await fetch(`${API_URL}/rooms?${params}`, { headers });
     const data = await res.json();
     if (!data.success) throw new Error(data.message);
 
@@ -57,7 +57,7 @@ async function fetchRooms() {
 // ── FETCH STATS ───────────────────────────────────────────────────
 async function fetchStats() {
   try {
-    const res  = await fetch(`${API}/stats`);
+    const res  = await fetch(`${API_URL}/stats`);
     const data = await res.json();
     if (data.success) {
       animateCount(document.getElementById('statRooms'),     data.totalRooms);
